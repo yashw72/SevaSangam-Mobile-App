@@ -83,7 +83,25 @@
     "continue_as_worker": "Continue as Worker"
   },
   "customer": {},
-  "worker": {},
+  "worker": {
+    "account_status_pending_title": "Verification In Progress",
+    "account_status_rejected_title": "Verification Unsuccessful",
+    "account_status_suspended_title": "Account Suspended",
+    "account_status_label": "Current Status",
+    "name_label": "Name",
+    "cooperative_label": "Cooperative",
+    "admin_review_note": "Administrator Review Note",
+    "status_reason_pending": "Your skills and trade certificates are currently being reviewed by the Cooperative Administrator. This usually takes 1–2 working days.",
+    "status_reason_rejected": "Your electrician certificate could not be verified by the Cooperative Administrator. Please review the guidelines and re-upload your documents.",
+    "status_reason_suspended": "Your account has been temporarily suspended by the Labour Cooperative Society pending a compliance audit.",
+    "status_review_note_rejected": "The uploaded trade certificate image was not legible. Please upload a clear photo of your original certificate or the verified copy.",
+    "status_review_note_suspended": "A routine audit flagged inconsistencies in job completion records. The cooperative will contact you within 3 working days.",
+    "account_status_explain": "Labour Cooperative Societies verify every worker's credentials and trade certificates to ensure fair job distribution and high trust for customers.",
+    "reupload_certificates": "Re-upload Certificates",
+    "edit_profile": "Edit Profile",
+    "suspended_contact_notice": "Your account is under review by the Cooperative Society. Please contact your cooperative administrator for assistance."
+  },
+
   "admin": {},
   "errors": {
     "general": "An unexpected error occurred. Please try again.",

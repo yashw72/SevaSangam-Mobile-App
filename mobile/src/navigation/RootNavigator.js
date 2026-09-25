@@ -1,12 +1,52 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import CustomerNavigator from './CustomerNavigator';
 import WorkerNavigator from './WorkerNavigator';
 import AdminNavigator from './AdminNavigator';
 import WorkerAccountStatusScreen from '../screens/auth/WorkerAccountStatus';
+import ROUTES from './routes';
+
+/**
+ * Minimal stack navigator for the WorkerAccountStatus screen.
+ * Gives it a `navigation` prop so the "Edit Profile" and "Re-upload Certificates"
+ * buttons can navigate to stub screens (Priti builds the real ones later).
+ */
+const StatusStack = createNativeStackNavigator();
+
+const WorkerAccountStatusNavigator = () => {
+  // Stub placeholder for screens that don't exist yet
+  const StubScreen = ({ route }) => (
+    <SafeAreaView style={styles.stubContainer}>
+      <Text style={styles.stubIcon}>🚧</Text>
+      <Text style={styles.stubTitle}>{route.name}</Text>
+      <Text style={styles.stubSubtitle}>This screen will be built by Priti.</Text>
+    </SafeAreaView>
+  );
+
+  return (
+    <StatusStack.Navigator screenOptions={{ headerShown: false }}>
+      <StatusStack.Screen
+        name={ROUTES.AUTH.WORKER_ACCOUNT_STATUS}
+        component={WorkerAccountStatusScreen}
+      />
+      {/* Stub navigation targets — Priti builds these real screens later */}
+      <StatusStack.Screen
+        name={ROUTES.WORKER.PROFILE}
+        component={StubScreen}
+        options={{ headerShown: true, title: 'Edit Profile' }}
+      />
+      <StatusStack.Screen
+        name={ROUTES.WORKER.CERTIFICATES}
+        component={StubScreen}
+        options={{ headerShown: true, title: 'Certificates' }}
+      />
+    </StatusStack.Navigator>
+  );
+};
 
 export const RootNavigator = () => {
   const { user, role, token, status, isLoading, login, logout } = useAuth();
@@ -33,24 +73,13 @@ export const RootNavigator = () => {
       return <CustomerNavigator />;
     }
 
-    // Role guard: Worker
+    // Role guard: Worker — ONLY verified workers reach WorkerNavigator
     if (role === 'worker') {
       if (status === 'verified') {
         return <WorkerNavigator />;
       }
-      return (
-        <WorkerAccountStatusScreen
-          status={status || 'pending'}
-          reason={
-            status === 'rejected'
-              ? 'Your electrician certificate could not be verified by the Cooperative Administrator. Please check guidelines and re-upload.'
-              : status === 'suspended'
-              ? 'Your account has been temporarily suspended by the Labour Cooperative Society pending an audit.'
-              : 'Your skills and trade certificates are currently under review by the Cooperative Administrator.'
-          }
-          onLogout={logout}
-        />
-      );
+      // pending / rejected / suspended → WorkerAccountStatus (never WorkerNavigator)
+      return <WorkerAccountStatusNavigator />;
     }
 
     // Role guard: Admin
@@ -102,6 +131,15 @@ export const RootNavigator = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[styles.devButton, role === 'worker' && status === 'rejected' && styles.devButtonActive]}
+            onPress={() => login({ role: 'worker', status: 'rejected', name: 'Amit Joshi (Rejected)' })}
+          >
+            <Text style={[styles.devButtonText, role === 'worker' && status === 'rejected' && styles.devButtonTextActive]}>
+              ❌ Worker (Rejected)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.devButton, role === 'worker' && status === 'suspended' && styles.devButtonActive]}
             onPress={() => login({ role: 'worker', status: 'suspended', name: 'Vijay Shinde (Suspended)' })}
           >
@@ -149,6 +187,30 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontWeight: '500',
   },
+  // Stub screen styles for placeholder screens
+  stubContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    padding: 24,
+  },
+  stubIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  stubTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  stubSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+  },
+  // Dev bar styles
   devBarContainer: {
     backgroundColor: '#0F172A',
     borderTopWidth: 1,
@@ -197,3 +259,4 @@ const styles = StyleSheet.create({
 });
 
 export default RootNavigator;
+
