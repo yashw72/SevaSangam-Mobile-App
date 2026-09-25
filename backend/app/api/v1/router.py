@@ -3,12 +3,16 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.users import router as users_router
 from app.api.v1.cooperatives import router as cooperatives_router
 from app.api.v1.workers import router as workers_router
+from app.api.v1.service_categories import router as service_categories_router
+from app.api.v1.bookings import router as bookings_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
 api_router.include_router(users_router)
 api_router.include_router(cooperatives_router)
 api_router.include_router(workers_router)
+api_router.include_router(service_categories_router)
+api_router.include_router(bookings_router)
 
 
 
