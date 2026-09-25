@@ -1,6 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
+import { getItem, setItem } from '../services/native/secureStorage';
 
 import en from './locales/en.json';
 import hi from './locales/hi.json';
@@ -41,32 +41,24 @@ const resources = {
  */
 export const getPersistedLanguage = async () => {
   try {
-    const isAvailable = await SecureStore.isAvailableAsync?.();
-    if (isAvailable === false) {
-      return null;
-    }
-    const savedLang = await SecureStore.getItemAsync(LANGUAGE_STORAGE_KEY);
+    const savedLang = await getItem(LANGUAGE_STORAGE_KEY);
     if (savedLang && SUPPORTED_LANGUAGES.some((lang) => lang.code === savedLang)) {
       return savedLang;
     }
   } catch (error) {
-    console.warn('[i18n] Could not read persisted language from SecureStore:', error);
+    console.warn('[i18n] Could not read persisted language from storage:', error);
   }
   return null;
 };
 
 /**
- * Safely persists user's selected language in expo-secure-store
+ * Safely persists user's selected language
  */
 export const persistLanguage = async (languageCode) => {
   try {
-    const isAvailable = await SecureStore.isAvailableAsync?.();
-    if (isAvailable === false) {
-      return;
-    }
-    await SecureStore.setItemAsync(LANGUAGE_STORAGE_KEY, languageCode);
+    await setItem(LANGUAGE_STORAGE_KEY, languageCode);
   } catch (error) {
-    console.warn('[i18n] Could not persist language to SecureStore:', error);
+    console.warn('[i18n] Could not persist language to storage:', error);
   }
 };
 
