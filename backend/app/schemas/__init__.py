@@ -3,6 +3,13 @@ Schemas package — re-export all schemas for convenience.
 """
 
 from backend.app.schemas.user import UserCreate, UserUpdate, UserResponse
+from backend.app.schemas.auth import (
+    RequestOtpRequest,
+    RequestOtpResponse,
+    VerifyOtpRequest,
+    AuthTokenResponse,
+    SelectRoleRequest,
+)
 from backend.app.schemas.cooperative import CooperativeCreate, CooperativeUpdate, CooperativeResponse
 from backend.app.schemas.worker import (
     WorkerCreate, WorkerUpdate, WorkerResponse,

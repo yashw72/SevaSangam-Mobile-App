@@ -41,8 +41,8 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     id: UUID
     role: UserRole
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: Optional[datetime] = Field(default=None, alias="createdAt")
+    updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
 
     model_config = {
         "from_attributes": True,
