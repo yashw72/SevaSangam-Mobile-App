@@ -2,35 +2,77 @@
 Database connection helpers.
 
 Provides both a synchronous engine (for Alembic migrations and seed scripts)
-and an async engine (for the FastAPI app at runtime).
+and an async engine (for the FastAPI app at runtime), along with session dependencies.
 """
 
-import os
-from dotenv import load_dotenv
+from typing import AsyncGenerator, Generator
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+)
+from app.core.config import settings
 
-# Load .env from the backend/ directory
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+# URLs from settings (with backwards-compatible variable names)
+SYNC_DATABASE_URL = settings.sync_database_url_resolved
+ASYNC_DATABASE_URL = settings.async_database_url
 
-POSTGRES_USER = os.getenv("POSTGRES_USER", "sevasangam")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "sevasangam_dev")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5433")
-POSTGRES_DB = os.getenv("POSTGRES_DB", "sevasangam")
+# Synchronous engine + session (used by Alembic migrations, seeds, CLI tools)
+sync_engine = create_engine(
+    SYNC_DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+)
+SyncSessionLocal = sessionmaker(
+    bind=sync_engine,
+    autocommit=False,
+    autoflush=False,
+)
+SessionLocal = SyncSessionLocal
 
-# Synchronous URL (psycopg2) — used by Alembic and seed scripts
-SYNC_DATABASE_URL = (
-    f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+# Asynchronous engine + session (used by runtime FastAPI endpoints)
+async_engine = create_async_engine(
+    ASYNC_DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    future=True,
+)
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
 )
 
-# Async URL (asyncpg) — used by the FastAPI app
-ASYNC_DATABASE_URL = (
-    f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-)
 
-# Synchronous engine + session (migrations, seeds)
-sync_engine = create_engine(SYNC_DATABASE_URL, echo=False)
-SyncSessionLocal = sessionmaker(bind=sync_engine)
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """
+    FastAPI dependency that provides an async SQLAlchemy session.
+    Closes the session cleanly after the request completes.
+    """
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
+def get_sync_db() -> Generator[Session, None, None]:
+    """
+    FastAPI dependency that provides a synchronous SQLAlchemy session
+    when sync endpoints or scripts are preferred.
+    """
+    db = SyncSessionLocal()
+    try:
+        yield db
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()

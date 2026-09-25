@@ -3,3 +3,9 @@ backend/.env
 
 # Docker persistent data
 docker/pgdata/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
